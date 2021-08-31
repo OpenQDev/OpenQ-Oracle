@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.21.1",
-    "ethers": "^5.4.4"
+    "ethers": "^5.4.4",
+    "express": "^4.17.1"
   }
 }
