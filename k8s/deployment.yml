@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openq-deployment
+  labels:
+    app: openq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openq
+  template:
+    metadata:
+      labels:
+        app: openq
+    spec:
+      containers:
+        - name: openq
+          image: alo42/openq:latest
+          ports:
+            - containerPort: 8090
