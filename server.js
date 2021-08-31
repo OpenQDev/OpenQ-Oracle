@@ -7,10 +7,7 @@ const withdrawIssueDepositFunctionSignature = 'function withdrawIssueDeposit(str
 const openQAddress = '0xB9479f72a819ca7DC03552a19EE4BE7fD7000B5d';
 const walletKey = process.env.WALLET_KEY;
 
-// Constants
 const PORT = 8090;
-
-// App
 const app = express();
 
 app.use(express.json());
