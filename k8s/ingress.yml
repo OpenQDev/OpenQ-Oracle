@@ -1,13 +1,15 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  namespace: default
   name: openq-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
-    - http:
+    - host: development.openq.dev
+      http:
         paths:
           - path: /
             pathType: Prefix
@@ -16,3 +18,27 @@ spec:
                 name: openq
                 port:
                   number: 8090
+    - host: staging.openq.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: openq
+                port:
+                  number: 8090
+    - host: production.openq.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: openq
+                port:
+                  number: 8090
+  tls:
+    - hosts:
+        - "*.openq.dev"
+      secretName: ssl-cert

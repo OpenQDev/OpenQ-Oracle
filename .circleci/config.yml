@@ -10,7 +10,16 @@ jobs:
           password: $DOCKERHUB_PASSWORD # context / project UI env-var reference
     steps:
       - checkout
-      - run: echo "this is the build job"
+      - run: docker build -t alo42/openq:latest .
+  deploy:
+    docker:
+      - image: alo42/openq:latest
+        auth:
+          username: alo42
+          password: $DOCKERHUB_PASSWORD # context / project UI env-var reference
+    steps:
+      - checkout
+      - run: docker build -t alo42/openq:latest .
   test:
     docker:
       - image: alo42/openq:latest
@@ -26,4 +35,6 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - test
+      - test:
+          requires:
+            - build
