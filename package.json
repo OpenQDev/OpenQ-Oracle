@@ -1,11 +1,11 @@
 {
-  "name": "eth_lambda_test",
+  "name": "OpenQ_API",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "locally": "node -e \"console.log(require('./index').handler(require('./event.json')));\""
+    "start": "node server.js",
+    "start:dev": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +14,8 @@
     "axios": "^0.21.1",
     "ethers": "^5.4.4",
     "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
   }
 }

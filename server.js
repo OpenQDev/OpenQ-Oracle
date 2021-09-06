@@ -4,8 +4,11 @@ const rpcNode = "https://rinkeby.infura.io/v3/3b83a506f358431399e427135570f8e8";
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
 const withdrawIssueDepositFunctionSignature = 'function withdrawIssueDeposit(string, string) public';
 
-const openQAddress = '0xB9479f72a819ca7DC03552a19EE4BE7fD7000B5d';
+const openQAddress = process.env.OPENQ_ADDRESS;
 const walletKey = process.env.WALLET_KEY;
+
+const registerUserFunctionSignature = 'function registerUserAddress(string, address) public';
+const getUserCanAssignAddress = require('./lib/check_user_owns_address');
 
 const PORT = 8090;
 const app = express();
@@ -13,7 +16,7 @@ const app = express();
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.send('OK');
+    res.send(`OpenQ address is: ${openQAddress}`);
 });
 
 app.post('/withdraw', async (req, res) => {
@@ -30,6 +33,27 @@ app.post('/withdraw', async (req, res) => {
                 res.send(result);
             } else {
                 res.send(`User ${username} does not have permission to withdraw on issue ${issueId}`);
+            }
+        })
+        .catch(error => {
+            res.send(error);
+        });
+});
+
+app.post('/register', async (req, res) => {
+    const { username, oauthToken, address } = req.body;
+
+    getUserCanAssignAddress(username, oauthToken, address)
+        .then(canRegister => {
+            if (canRegister) {
+                const provider = new ethers.providers.JsonRpcProvider(rpcNode);
+                const wallet = new ethers.Wallet(walletKey, provider);
+                const contract = new ethers.Contract(openQAddress, [registerUserFunctionSignature], provider);
+                const contractWithWallet = contract.connect(wallet);
+                const result = contractWithWallet.registerUserAddress(username, address);
+                res.send(result);
+            } else {
+                res.send(`User ${username} does not have permission to register address ${address}.`);
             }
         })
         .catch(error => {

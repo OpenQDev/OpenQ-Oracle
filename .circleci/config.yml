@@ -1,13 +1,12 @@
 version: 2.1
 
-# Define the jobs we want to run for this project
 jobs:
   build:
     docker:
       - image: alo42/openq:latest
         auth:
           username: alo42
-          password: $DOCKERHUB_PASSWORD # context / project UI env-var reference
+          password: $DOCKERHUB_PASSWORD
     steps:
       - checkout
       - run: docker build -t alo42/openq:latest .
@@ -16,7 +15,7 @@ jobs:
       - image: alo42/openq:latest
         auth:
           username: alo42
-          password: $DOCKERHUB_PASSWORD # context / project UI env-var reference
+          password: $DOCKERHUB_PASSWORD
     steps:
       - checkout
       - run: docker build -t alo42/openq:latest .
@@ -25,12 +24,11 @@ jobs:
       - image: alo42/openq:latest
         auth:
           username: alo42
-          password: $DOCKERHUB_PASSWORD # context / project UI env-var reference
+          password: $DOCKERHUB_PASSWORD
     steps:
       - checkout
       - run: echo "this is the test job"
 
-# Orchestrate our job run sequence
 workflows:
   build_and_test:
     jobs:
