@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+  kubernetes: circleci/kubernetes@0.12.0
 jobs:
   build:
     machine: true
@@ -7,16 +9,20 @@ jobs:
       - run: echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_USER --password-stdin
       - run: docker build -t alo42/openq:latest .
       - run: docker push alo42/openq:latest
-  install:
-    machine: true
-    steps:
-      - run: curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-      - run: chmod +x ./kubectl
-      - run: sudo mv ./kubectl /usr/local/bin/kubectl
-      - run: mkdir ${HOME}/.kube
-      - run: echo "$KUBE_CONFIG" | base64 --decode > ${HOME}/.kube/config
   deploy:
     machine: true
     steps:
-      - run: kubectl config use-context production
-      - run: kubectl get pods
+      - checkout
+      - kubernetes/install-kubectl
+      - run: mkdir ${HOME}/.kube
+      - run: echo "$KUBE_CONFIG" | base64 --decode > ${HOME}/.kube/config
+      - run: kubectl config use-context openq-production
+      - run: kubectl apply -f ./k8s
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
