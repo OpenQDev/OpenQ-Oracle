@@ -1,38 +1,12 @@
 version: 2.1
-
 jobs:
   build:
-    docker:
-      - image: alo42/openq:latest
-        auth:
-          username: alo42
-          password: $DOCKERHUB_PASSWORD
+    machine: true
     steps:
       - checkout
+      - run: echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_USER --password-stdin
+      # build the application image
       - run: docker build -t alo42/openq:latest .
-  deploy:
-    docker:
-      - image: alo42/openq:latest
-        auth:
-          username: alo42
-          password: $DOCKERHUB_PASSWORD
-    steps:
-      - checkout
-      - run: docker build -t alo42/openq:latest .
-  test:
-    docker:
-      - image: alo42/openq:latest
-        auth:
-          username: alo42
-          password: $DOCKERHUB_PASSWORD
-    steps:
-      - checkout
-      - run: echo "this is the test job"
 
-workflows:
-  build_and_test:
-    jobs:
-      - build
-      - test:
-          requires:
-            - build
+      # deploy the image
+      - run: docker push alo42/openq:latest
