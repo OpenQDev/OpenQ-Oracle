@@ -1,9 +1,9 @@
 const express = require('express');
 const ethers = require('ethers');
-const rpcNode = "https://rinkeby.infura.io/v3/3b83a506f358431399e427135570f8e8";
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
 const withdrawIssueDepositFunctionSignature = 'function withdrawIssueDeposit(string, string) public';
 
+const rpcNode = process.env.RPC_NODE;
 const openQAddress = process.env.OPENQ_ADDRESS;
 const walletKey = process.env.WALLET_KEY;
 
