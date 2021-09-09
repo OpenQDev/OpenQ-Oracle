@@ -1,8 +1,0 @@
-apiVersion: v1
-type: kubernetes.io/tls
-data:
-  tls.crt: <data-ommitted>
-  tls.key: <data-ommitted>
-kind: Secret
-metadata:
-  name: ssl-cert
