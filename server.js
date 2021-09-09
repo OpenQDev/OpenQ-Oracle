@@ -1,14 +1,15 @@
 const express = require('express');
 const ethers = require('ethers');
+
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
-const withdrawIssueDepositFunctionSignature = 'function withdrawIssueDeposit(string, string) public';
+const getUserCanAssignAddress = require('./lib/check_user_owns_address');
 
 const rpcNode = process.env.RPC_NODE;
 const openQAddress = process.env.OPENQ_ADDRESS;
 const walletKey = process.env.WALLET_KEY;
 
+const withdrawIssueDepositFunctionSignature = 'function withdrawIssueDeposit(string, string) public';
 const registerUserFunctionSignature = 'function registerUserAddress(string, address) public';
-const getUserCanAssignAddress = require('./lib/check_user_owns_address');
 
 const PORT = 8090;
 const app = express();
