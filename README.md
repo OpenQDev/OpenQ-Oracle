@@ -80,3 +80,5 @@ Access to cluster implies access to all namespaces.
 #### SSL
 
 SSL Certtificates were provided by Let's Encrypt certbot with the dns-0 challenge.
+
+They are available in each namespace as `ssl-cert` and an example secret can be found in [./k8s/ssl.yml](./k8s/ssl.yml).
