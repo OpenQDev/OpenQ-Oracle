@@ -7,6 +7,7 @@ services:
     ports:
       - "8090:8090"
     environment:
+      RPC_NODE: http://127.0.0.1:8545
       WALLET_KEY: "0x701b615bbdfb9de65240bc28bd21bbc0d996645a3dd57e7b12bc2bdf6f192c82"
       OPENQ_ADDRESS: "0x0165878a594ca255338adfa4d48449f69242eb8f"
     volumes:
