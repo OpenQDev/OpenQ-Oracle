@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: openq-deployment
+  name: openq
   labels:
     app: openq
 spec:
@@ -19,3 +19,4 @@ spec:
           image: alo42/openq:latest
           ports:
             - containerPort: 8090
+          resources: {}
