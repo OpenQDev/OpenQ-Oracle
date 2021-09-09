@@ -65,11 +65,18 @@ The configuration can be found at [./k8s](./k8s).
 
 Notably, the routing for our environment domains is also here, including SSL: [./k8s/ingress.yml](./k8s/ingress.yml).
 
-SSL Certtificates were provided by Let's Encrypt certbot with the dns-0 challenge.
-
 #### Namespaces
 Each environment correlates to one Kubernetes [namespace](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/): `development`, `staging`, and `production`.
 
 Right now, a push to any branch will release to `production`.
 
 In the future, a push to `development` branch will release to `development`, and so on.
+
+#### Kubeconfig
+CircleCI has access to a [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)` file which gives it access to the OpenQ cluster.
+
+Access to cluster implies access to all namespaces.
+
+#### SSL
+
+SSL Certtificates were provided by Let's Encrypt certbot with the dns-0 challenge.
