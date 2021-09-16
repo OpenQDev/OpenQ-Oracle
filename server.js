@@ -8,7 +8,7 @@ const rpcNode = process.env.RPC_NODE;
 const openQAddress = process.env.OPENQ_ADDRESS;
 const walletKey = process.env.WALLET_KEY;
 
-const withdrawIssueDepositFunctionSignature = 'function withdrawIssueDeposit(string, string) public';
+const withdrawIssueDepositFunctionSignature = 'function withdrawIssueDeposit(string, address) public';
 const registerUserFunctionSignature = 'function registerUserAddress(string, address) public';
 
 const PORT = 8090;
@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/withdraw', async (req, res) => {
-    const { username, issueId, oauthToken } = req.body;
+    const { username, issueId, payoutAddress, oauthToken } = req.body;
 
     checkWithdrawalEligibility(username, issueId, oauthToken)
         .then(canWithdraw => {
@@ -30,7 +30,7 @@ app.post('/withdraw', async (req, res) => {
                 const wallet = new ethers.Wallet(walletKey, provider);
                 const contract = new ethers.Contract(openQAddress, [withdrawIssueDepositFunctionSignature], provider);
                 const contractWithWallet = contract.connect(wallet);
-                const result = contractWithWallet.withdrawIssueDeposit(issueId, username);
+                const result = contractWithWallet.withdrawIssueDeposit(issueId, payoutAddress);
                 res.send(result);
             } else {
                 res.send(`User ${username} does not have permission to withdraw on issue ${issueId}`);
