@@ -33,14 +33,18 @@ app.post('/withdraw', async (req, res) => {
                 const contract = new ethers.Contract(openQAddress, [withdrawIssueDepositFunctionSignature], provider);
                 const contractWithWallet = contract.connect(wallet);
                 const result = contractWithWallet.withdrawIssueDeposit(issueId, payoutAddress);
+                res.statusCode = 200;
                 res.send(result);
             } else {
+                res.statusCode = 401;
                 res.send(`User ${username} does not have permission to withdraw on issue ${issueId}`);
             }
         })
         .catch(error => {
-            console.log(error);
-            res.send(error);
+            if (error.message == "Request failed with status code 401") {
+                res.statusCode = 401;
+                res.send(error);
+            }
         });
 });
 
