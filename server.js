@@ -37,21 +37,17 @@ app.post('/withdraw', async (req, res) => {
                 const result = contractWithWallet.withdrawIssueDeposit(issueId, payoutAddress);
                 res.statusCode = 200;
                 res.send(result);
-            } else {
-                res.statusCode = 401;
-                res.send(`User ${username} does not have permission to withdraw on issue ${issueId}`);
             }
         })
         .catch(error => {
-            if (error.type == "NOT_FOUND") {
+            const { type, reason } = error;
+            if (type == "NOT_FOUND") {
                 res.statusCode = 404;
-                return res.json(error);
             }
-            if (error.type == "UNAUTHORIZED") {
+            if (type == "UNAUTHORIZED") {
                 res.statusCode = 401;
-                return res.json(error);
             }
-            res.send(error);
+            return res.json(error);
         });
 });
 
