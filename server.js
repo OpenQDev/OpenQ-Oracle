@@ -4,6 +4,7 @@ const cors = require("cors");
 
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
 const getUserCanAssignAddress = require('./lib/check_user_owns_address');
+const getIssueIdFromUrl = require('./lib/issueUrlToId');
 
 const rpcNode = process.env.RPC_NODE;
 const openQAddress = process.env.OPENQ_ADDRESS;
@@ -41,10 +42,15 @@ app.post('/withdraw', async (req, res) => {
             }
         })
         .catch(error => {
+            console.log(error);
             if (error.message == "Request failed with status code 401") {
                 res.statusCode = 401;
-                res.send(error);
             }
+            if (error.message.includes("Could not resolve to a node with the global id of")) {
+                res.statusCode = 404;
+                res.send(`No issue with id ${issueId}`);
+            }
+            res.send(error);
         });
 });
 
@@ -63,6 +69,18 @@ app.post('/register', async (req, res) => {
             } else {
                 res.send(`User ${username} does not have permission to register address ${address}.`);
             }
+        })
+        .catch(error => {
+            res.send(error);
+        });
+});
+
+app.post('/issueUrlToId', async (req, res) => {
+    const { owner, repoName, number, oauthToken } = req.body;
+
+    getIssueIdFromUrl(owner, repoName, number, oauthToken)
+        .then(response => {
+            res.send(response);
         })
         .catch(error => {
             res.send(error);
