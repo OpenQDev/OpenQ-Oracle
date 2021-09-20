@@ -27,7 +27,8 @@ app.post('/withdraw', async (req, res) => {
     const { username, issueId, payoutAddress, oauthToken } = req.body;
 
     checkWithdrawalEligibility(username, issueId, oauthToken)
-        .then(canWithdraw => {
+        .then(result => {
+            const { canWithdraw, reason } = result;
             if (canWithdraw) {
                 const provider = new ethers.providers.JsonRpcProvider(rpcNode);
                 const wallet = new ethers.Wallet(walletKey, provider);
@@ -42,13 +43,13 @@ app.post('/withdraw', async (req, res) => {
             }
         })
         .catch(error => {
-            console.log(error);
-            if (error.message == "Request failed with status code 401") {
-                res.statusCode = 401;
-            }
-            if (error.message.includes("Could not resolve to a node with the global id of")) {
+            if (error.type == "NOT_FOUND") {
                 res.statusCode = 404;
-                res.send(`No issue with id ${issueId}`);
+                return res.json(error);
+            }
+            if (error.type == "UNAUTHORIZED") {
+                res.statusCode = 401;
+                return res.json(error);
             }
             res.send(error);
         });
