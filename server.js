@@ -1,5 +1,6 @@
 const express = require('express');
 const ethers = require('ethers');
+const cors = require("cors");
 
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
 const getUserCanAssignAddress = require('./lib/check_user_owns_address');
@@ -13,6 +14,7 @@ const registerUserFunctionSignature = 'function registerUserAddress(string, addr
 
 const PORT = 8090;
 const app = express();
+app.use(cors());
 
 app.use(express.json());
 
@@ -37,6 +39,7 @@ app.post('/withdraw', async (req, res) => {
             }
         })
         .catch(error => {
+            console.log(error);
             res.send(error);
         });
 });
