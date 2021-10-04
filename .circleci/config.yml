@@ -7,22 +7,10 @@ jobs:
     steps:
       - checkout
       - run: echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_USER --password-stdin
-      - run: docker build -t alo42/openq:latest .
-      - run: docker push alo42/openq:latest
-  deploy:
-    machine: true
-    steps:
-      - checkout
-      - kubernetes/install-kubectl
-      - run: mkdir ${HOME}/.kube
-      - run: echo "$KUBE_CONFIG" | base64 --decode > ${HOME}/.kube/config
-      - run: kubectl config use-context openq-production
-      - run: kubectl apply -f ./k8s
+      - run: docker build -t alo42/openq-api:latest .
+      - run: docker push alo42/openq-api:latest
 workflows:
   version: 2
   build-and-deploy:
     jobs:
       - build
-      - deploy:
-          requires:
-            - build
