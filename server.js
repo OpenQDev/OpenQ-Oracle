@@ -24,11 +24,12 @@ app.get('/', (req, res) => {
 });
 
 app.post('/withdraw', async (req, res) => {
-    const { username, issueId, payoutAddress, oauthToken } = req.body;
+    const { issueId, payoutAddress, oauthToken } = req.body;
 
-    await checkWithdrawalEligibility(username, issueId, oauthToken)
+    await checkWithdrawalEligibility(issueId, oauthToken)
         .then(result => {
-            const { canWithdraw, reason } = result;
+            const { canWithdraw, reason, type } = result;
+
             if (canWithdraw) {
                 const provider = new ethers.providers.JsonRpcProvider(rpcNode);
                 const wallet = new ethers.Wallet(walletKey, provider);
@@ -44,10 +45,16 @@ app.post('/withdraw', async (req, res) => {
             switch (type) {
                 case "NOT_FOUND":
                     res.statusCode = 404;
+                    break;
                 case "NOT_CLOSED":
                     res.statusCode = 404;
-                case "UNAUTHORIZED":
+                    break;
+                case "INVALID_OAUTH_TOKEN":
                     res.statusCode = 401;
+                    break;
+                case "CANNOT_WITHDRAW":
+                    res.statusCode = 401;
+                    break;
             }
             return res.json(error);
         });
