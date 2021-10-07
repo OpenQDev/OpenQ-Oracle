@@ -41,11 +41,13 @@ app.post('/withdraw', async (req, res) => {
         })
         .catch(error => {
             const { type, reason } = error;
-            if (type == "NOT_FOUND") {
-                res.statusCode = 404;
-            }
-            if (type == "UNAUTHORIZED") {
-                res.statusCode = 401;
+            switch (type) {
+                case "NOT_FOUND":
+                    res.statusCode = 404;
+                case "NOT_CLOSED":
+                    res.statusCode = 404;
+                case "UNAUTHORIZED":
+                    res.statusCode = 401;
             }
             return res.json(error);
         });
