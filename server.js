@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 app.post('/withdraw', async (req, res) => {
     const { username, issueId, payoutAddress, oauthToken } = req.body;
 
-    checkWithdrawalEligibility(username, issueId, oauthToken)
+    await checkWithdrawalEligibility(username, issueId, oauthToken)
         .then(result => {
             const { canWithdraw, reason } = result;
             if (canWithdraw) {
@@ -73,13 +73,16 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/issueUrlToId', async (req, res) => {
-    const { owner, repoName, number, oauthToken } = req.body;
+    const { issueUrl, token } = req.body;
 
-    getIssueIdFromUrl(owner, repoName, number, oauthToken)
+    getIssueIdFromUrl(issueUrl, token)
         .then(response => {
             res.send(response);
         })
         .catch(error => {
+            if (error == "NOT_FOUND") {
+                res.statusCode = 404;
+            }
             res.send(error);
         });
 });
