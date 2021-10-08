@@ -6,11 +6,11 @@ const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility')
 const getUserCanAssignAddress = require('./lib/check_user_owns_address');
 const getIssueIdFromUrl = require('./lib/issueUrlToId');
 
-const rpcNode = process.env.RPC_NODE;
+const providerUrl = process.env.PROVIDER_URL;
 const openQAddress = process.env.OPENQ_ADDRESS;
 const walletKey = process.env.WALLET_KEY;
 
-const withdrawIssueDepositFunctionSignature = 'function withdrawIssueDeposit(string, address) public';
+const withdrawIssueDepositFunctionSignature = 'function claimBounty(string, address) public';
 const registerUserFunctionSignature = 'function registerUserAddress(string, address) public';
 
 const PORT = 8090;
@@ -27,17 +27,17 @@ app.post('/withdraw', async (req, res) => {
     const { issueId, payoutAddress, oauthToken } = req.body;
 
     await checkWithdrawalEligibility(issueId, oauthToken)
-        .then(result => {
+        .then(async result => {
             const { canWithdraw, reason, type } = result;
 
             if (canWithdraw) {
-                const provider = new ethers.providers.JsonRpcProvider(rpcNode);
+                const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
                 const wallet = new ethers.Wallet(walletKey, provider);
                 const contract = new ethers.Contract(openQAddress, [withdrawIssueDepositFunctionSignature], provider);
                 const contractWithWallet = contract.connect(wallet);
-                const result = contractWithWallet.withdrawIssueDeposit(issueId, payoutAddress);
+                const claimBountyResult = await contractWithWallet.claimBounty(issueId, payoutAddress);
                 res.statusCode = 200;
-                res.send(result);
+                res.send("i worked");
             }
         })
         .catch(error => {
@@ -45,18 +45,22 @@ app.post('/withdraw', async (req, res) => {
             switch (type) {
                 case "NOT_FOUND":
                     res.statusCode = 404;
-                    break;
+                    return res.json(error);
                 case "NOT_CLOSED":
                     res.statusCode = 404;
-                    break;
+                    return res.json(error);
                 case "INVALID_OAUTH_TOKEN":
                     res.statusCode = 401;
-                    break;
-                case "CANNOT_WITHDRAW":
+                    return res.json(error);
+                case "ISSUE_NOT_CLOSED_BY_USER":
                     res.statusCode = 401;
-                    break;
+                    return res.json(error);
+                case "ISSUE_NOT_CLOSED_BY_PR":
+                    res.statusCode = 401;
+                    return res.json(error);
+                default:
+                    return res.send(error.toString());
             }
-            return res.json(error);
         });
 });
 
@@ -66,11 +70,12 @@ app.post('/register', async (req, res) => {
     getUserCanAssignAddress(username, oauthToken, address)
         .then(canRegister => {
             if (canRegister) {
-                const provider = new ethers.providers.JsonRpcProvider(rpcNode);
+                const provider = new ethers.providers.JsonRpcProvider(providerUrl);
                 const wallet = new ethers.Wallet(walletKey, provider);
                 const contract = new ethers.Contract(openQAddress, [registerUserFunctionSignature], provider);
                 const contractWithWallet = contract.connect(wallet);
                 const result = contractWithWallet.registerUserAddress(username, address);
+                console.log(result);
                 res.send(result);
             } else {
                 res.send(`User ${username} does not have permission to register address ${address}.`);
