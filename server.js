@@ -106,4 +106,11 @@ app.post('/issueUrlToId', async (req, res) => {
 });
 
 app.listen(PORT);
+const env = {
+    "OPENQ_ADDRESS": process.env.OPENQ_ADDRESS,
+    "PROVIDER_URL": process.env.PROVIDER_URL,
+    "WALLET_KEY": process.env.WALLET_KEY,
+    "CHAIN_ID": process.env.CHAIN_ID
+};
+console.log(`Environment: ${JSON.stringify(env)}`);
 console.log(`Listening on ${PORT}`);
