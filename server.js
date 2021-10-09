@@ -23,6 +23,10 @@ app.get('/', (req, res) => {
     res.send(`OpenQ address is: ${openQAddress}`);
 });
 
+app.get('/env', (req, res) => {
+    res.send(`${JSON.stringify(process.env.PROVIDER_URL)}`);
+});
+
 app.post('/withdraw', async (req, res) => {
     const { issueId, payoutAddress, oauthToken } = req.body;
 
@@ -31,7 +35,7 @@ app.post('/withdraw', async (req, res) => {
             const { canWithdraw, reason, type } = result;
 
             if (canWithdraw) {
-                const provider = new ethers.providers.JsonRpcProvider("http://localhost:8545");
+                const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
                 const wallet = new ethers.Wallet(walletKey, provider);
                 const contract = new ethers.Contract(openQAddress, [withdrawIssueDepositFunctionSignature], provider);
                 const contractWithWallet = contract.connect(wallet);
