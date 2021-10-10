@@ -5,9 +5,10 @@ const cors = require("cors");
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
 const getUserCanAssignAddress = require('./lib/check_user_owns_address');
 const getIssueIdFromUrl = require('./lib/issueUrlToId');
+const addresses = require('./addresses.json');
 
 const providerUrl = process.env.PROVIDER_URL;
-const openQAddress = process.env.OPENQ_ADDRESS;
+const openQAddress = addresses.OPENQ_ADDRESS;
 const walletKey = process.env.WALLET_KEY;
 
 const withdrawIssueDepositFunctionSignature = 'function claimBounty(string, address) public';
@@ -18,9 +19,8 @@ const app = express();
 app.use(cors());
 
 app.use(express.json());
-
 app.get('/', (req, res) => {
-    res.send(`OpenQ address is: ${openQAddress}`);
+    res.send(`OpenQ address is: ${addresses.OPENQ_ADDRESS}`);
 });
 
 app.get('/env', (req, res) => {
