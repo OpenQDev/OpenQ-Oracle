@@ -28,11 +28,11 @@ app.get('/env', (req, res) => {
 });
 
 app.post('/withdraw', async (req, res) => {
-    const { issueId, payoutAddress, oauthToken } = req.body;
+    const { issueUrl, payoutAddress, oauthToken } = req.body;
 
-    await checkWithdrawalEligibility(issueId, oauthToken)
+    await checkWithdrawalEligibility(issueUrl, oauthToken)
         .then(async result => {
-            const { canWithdraw, reason, type } = result;
+            const { canWithdraw, reason, type, issueId } = result;
 
             if (canWithdraw) {
                 const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
