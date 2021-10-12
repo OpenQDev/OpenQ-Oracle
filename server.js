@@ -5,7 +5,7 @@ const cors = require("cors");
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
 const getUserCanAssignAddress = require('./lib/check_user_owns_address');
 const getIssueIdFromUrl = require('./lib/issueUrlToId');
-const addresses = require('./addresses.json');
+const addresses = require('./addresses/addresses.json');
 
 const providerUrl = process.env.PROVIDER_URL;
 const openQAddress = addresses.OPENQ_ADDRESS;
