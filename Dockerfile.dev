@@ -5,5 +5,5 @@ RUN apk update && apk upgrade && \
 COPY package.json .
 RUN yarn
 COPY . .
-EXPOSE 8090
+EXPOSE 8080
 CMD yarn start:dev
