@@ -15,6 +15,8 @@ const walletKey = process.env.WALLET_KEY;
 const withdrawIssueDepositFunctionSignature = 'function claimBounty(string, address) public';
 const registerUserFunctionSignature = 'function registerUserAddress(string, address) public';
 
+require("dotenv").config();
+
 const PORT = 8090;
 const app = express();
 app.use(cors({ credentials: true, origin: process.env.ORIGIN_URL }));
