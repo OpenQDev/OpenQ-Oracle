@@ -3,6 +3,8 @@ const ethers = require('ethers');
 const cors = require("cors");
 const cookieParser = require('cookie-parser');
 
+const { abi: openqABI } = require('./artifacts/contracts/OpenQ.sol/OpenQ.json');
+
 // Helper methods
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
 const getUserCanAssignAddress = require('./lib/check_user_owns_address');
@@ -31,16 +33,13 @@ app.get('/env', (req, res) => {
     res.send(`${JSON.stringify(process.env.PROVIDER_URL)}`);
 });
 
-const withdrawIssueDepositFunctionSignature = 'function claimBounty(string, address) public';
-app.post('/withdraw', async (req, res) => {
+app.post('/claim', async (req, res) => {
     const { issueUrl, payoutAddress } = req.body;
 
     const oauthToken = req.signedCookies.github_oauth_token;
-    console.log(oauthToken);
 
     if (typeof oauthToken == "undefined") {
-        res.statusCode = 401;
-        return res.send("No github oauth token.");
+        return res.status(401).send("No github oauth token.");
     }
 
     await checkWithdrawalEligibility(issueUrl, oauthToken)
@@ -50,9 +49,8 @@ app.post('/withdraw', async (req, res) => {
             if (canWithdraw) {
                 const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
                 const wallet = new ethers.Wallet(walletKey, provider);
-                const contract = new ethers.Contract(openQAddress, [withdrawIssueDepositFunctionSignature], provider);
+                const contract = new ethers.Contract(openQAddress, openqABI, provider);
                 const contractWithWallet = contract.connect(wallet);
-
                 const issueId = await getIssueIdFromUrl(issueUrl, oauthToken);
                 const issueAddress = await contractWithWallet.issueToAddress(issueId);
 
@@ -61,7 +59,7 @@ app.post('/withdraw', async (req, res) => {
                     const claimBountyResult = await contractWithWallet.claimBounty(issueId, payoutAddress);
                     res.status(200).json(result);
                 } else {
-                    res.status(401).json({ canWithdraw: false, type: "ISSUE_IS_CLOSED", message: "The issue you are attempting to claim has already been claimed by xyz address." });
+                    res.status(401).json({ canWithdraw: false, type: "ISSUE_IS_CLAIMED", message: "The issue you are attempting to claim has already been claimed by xyz address." });
                 }
             }
         })
@@ -75,7 +73,6 @@ app.post('/withdraw', async (req, res) => {
                 case "INVALID_OAUTH_TOKEN":
                     return res.status(401).json(error);
                 case "ISSUE_NOT_CLOSED_BY_USER":
-                    res.statusCode = ;
                     return res.status(401).json(error);
                 case "ISSUE_NOT_CLOSED_BY_PR":
                     return res.status(401).json(error);
@@ -85,7 +82,6 @@ app.post('/withdraw', async (req, res) => {
         });
 });
 
-const registerUserFunctionSignature = 'function registerUserAddress(string, address) public';
 app.post('/register', async (req, res) => {
     const { username, oauthToken, address } = req.body;
 
@@ -94,7 +90,7 @@ app.post('/register', async (req, res) => {
             if (canRegister) {
                 const provider = new ethers.providers.JsonRpcProvider(providerUrl);
                 const wallet = new ethers.Wallet(walletKey, provider);
-                const contract = new ethers.Contract(openQAddress, [registerUserFunctionSignature], provider);
+                const contract = new ethers.Contract(openQAddress, openqABI, provider);
                 const contractWithWallet = contract.connect(wallet);
                 const result = contractWithWallet.registerUserAddress(username, address);
                 console.log(result);
