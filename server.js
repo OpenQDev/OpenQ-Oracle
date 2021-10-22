@@ -3,26 +3,26 @@ const ethers = require('ethers');
 const cors = require("cors");
 const cookieParser = require('cookie-parser');
 
+// Helper methods
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
 const getUserCanAssignAddress = require('./lib/check_user_owns_address');
 const getIssueIdFromUrl = require('./lib/issueUrlToId');
-const addresses = require('./addresses/addresses.json');
 
+// Setup environment
+require("dotenv").config();
+const addresses = require('./addresses/addresses.json');
 const providerUrl = process.env.PROVIDER_URL;
 const openQAddress = addresses.OPENQ_ADDRESS;
 const walletKey = process.env.WALLET_KEY;
 
-const withdrawIssueDepositFunctionSignature = 'function claimBounty(string, address) public';
-const registerUserFunctionSignature = 'function registerUserAddress(string, address) public';
-
-require("dotenv").config();
-
+// Configure Express server middleware
 const PORT = 8090;
 const app = express();
 app.use(cors({ credentials: true, origin: process.env.ORIGIN_URL }));
 app.use(cookieParser('entropydfnjd23'));
-
 app.use(express.json());
+
+// Routes
 app.get('/', (req, res) => {
     res.send(`OpenQ address is: ${addresses.OPENQ_ADDRESS}`);
 });
@@ -31,10 +31,12 @@ app.get('/env', (req, res) => {
     res.send(`${JSON.stringify(process.env.PROVIDER_URL)}`);
 });
 
+const withdrawIssueDepositFunctionSignature = 'function claimBounty(string, address) public';
 app.post('/withdraw', async (req, res) => {
     const { issueUrl, payoutAddress } = req.body;
 
     const oauthToken = req.signedCookies.github_oauth_token;
+    console.log(oauthToken);
 
     if (typeof oauthToken == "undefined") {
         res.statusCode = 401;
@@ -50,35 +52,40 @@ app.post('/withdraw', async (req, res) => {
                 const wallet = new ethers.Wallet(walletKey, provider);
                 const contract = new ethers.Contract(openQAddress, [withdrawIssueDepositFunctionSignature], provider);
                 const contractWithWallet = contract.connect(wallet);
-                const claimBountyResult = await contractWithWallet.claimBounty(issueId, payoutAddress);
-                res.statusCode = 200;
-                res.send("i worked");
+
+                const issueId = await getIssueIdFromUrl(issueUrl, oauthToken);
+                const issueAddress = await contractWithWallet.issueToAddress(issueId);
+
+                const issueIsOpen = await contractWithWallet.issueIsOpen(issueId);
+                if (issueIsOpen) {
+                    const claimBountyResult = await contractWithWallet.claimBounty(issueId, payoutAddress);
+                    res.status(200).json(result);
+                } else {
+                    res.status(401).json({ canWithdraw: false, type: "ISSUE_IS_CLOSED", message: "The issue you are attempting to claim has already been claimed by xyz address." });
+                }
             }
         })
         .catch(error => {
             const { type, reason } = error;
             switch (type) {
                 case "NOT_FOUND":
-                    res.statusCode = 404;
-                    return res.json(error);
+                    return res.status(404).json(error);
                 case "NOT_CLOSED":
-                    res.statusCode = 404;
-                    return res.json(error);
+                    return res.status(404).json(error);
                 case "INVALID_OAUTH_TOKEN":
-                    res.statusCode = 401;
-                    return res.json(error);
+                    return res.status(401).json(error);
                 case "ISSUE_NOT_CLOSED_BY_USER":
-                    res.statusCode = 401;
-                    return res.json(error);
+                    res.statusCode = ;
+                    return res.status(401).json(error);
                 case "ISSUE_NOT_CLOSED_BY_PR":
-                    res.statusCode = 401;
-                    return res.json(error);
+                    return res.status(401).json(error);
                 default:
-                    return res.send(error.toString());
+                    return res.status(500).json(error);
             }
         });
 });
 
+const registerUserFunctionSignature = 'function registerUserAddress(string, address) public';
 app.post('/register', async (req, res) => {
     const { username, oauthToken, address } = req.body;
 
@@ -117,11 +124,13 @@ app.post('/issueUrlToId', async (req, res) => {
 });
 
 app.listen(PORT);
+
 const env = {
     "OPENQ_ADDRESS": process.env.OPENQ_ADDRESS,
     "PROVIDER_URL": process.env.PROVIDER_URL,
     "WALLET_KEY": process.env.WALLET_KEY,
     "CHAIN_ID": process.env.CHAIN_ID
 };
+
 console.log(`Environment: ${JSON.stringify(env)}`);
 console.log(`Listening on ${PORT}`);
