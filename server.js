@@ -12,10 +12,6 @@ const getIssueIdFromUrl = require('./lib/issueUrlToId');
 
 // Setup environment
 require("dotenv").config();
-const addresses = require('./addresses/addresses.json');
-const providerUrl = process.env.PROVIDER_URL;
-const openQAddress = addresses.OPENQ_ADDRESS;
-const walletKey = process.env.WALLET_KEY;
 
 // Configure Express server middleware
 const PORT = 8090;
@@ -26,7 +22,7 @@ app.use(express.json());
 
 // Routes
 app.get('/', (req, res) => {
-    res.send(`OpenQ address is: ${addresses.OPENQ_ADDRESS}`);
+    res.send(`OpenQ address is: ${process.env.OPENQ_ADDRESS}`);
 });
 
 app.get('/env', (req, res) => {
@@ -39,7 +35,8 @@ app.post('/claim', async (req, res) => {
     const oauthToken = req.signedCookies.github_oauth_token;
 
     if (typeof oauthToken == "undefined") {
-        return res.status(401).send("No github oauth token.");
+        const error = { issueId: null, canWithdraw: false, type: "NO_GITHUB_OAUTH_TOKEN", message: `No GitHub OAuth token. You must sign in.` };
+        return res.status(401).json(error);
     }
 
     await checkWithdrawalEligibility(issueUrl, oauthToken)
@@ -48,15 +45,16 @@ app.post('/claim', async (req, res) => {
 
             if (canWithdraw) {
                 const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
-                const wallet = new ethers.Wallet(walletKey, provider);
-                const contract = new ethers.Contract(openQAddress, openqABI, provider);
+                const wallet = new ethers.Wallet(process.env.WALLET_KEY, provider);
+                const contract = new ethers.Contract(process.env.OPENQ_ADDRESS, openqABI, provider);
                 const contractWithWallet = contract.connect(wallet);
                 const issueId = await getIssueIdFromUrl(issueUrl, oauthToken);
                 const issueAddress = await contractWithWallet.issueToAddress(issueId);
 
                 const issueIsOpen = await contractWithWallet.issueIsOpen(issueId);
                 if (issueIsOpen) {
-                    const claimBountyResult = await contractWithWallet.claimBounty(issueId, payoutAddress);
+                    const options = { gasLimit: 3000000 };
+                    const claimBountyResult = await contractWithWallet.claimBounty(issueId, payoutAddress, options);
                     res.status(200).json(result);
                 } else {
                     res.status(401).json({ canWithdraw: false, type: "ISSUE_IS_CLAIMED", message: "The issue you are attempting to claim has already been claimed by xyz address." });
@@ -64,6 +62,7 @@ app.post('/claim', async (req, res) => {
             }
         })
         .catch(error => {
+            console.log(error);
             const { type, reason } = error;
             switch (type) {
                 case "NOT_FOUND":
@@ -77,7 +76,7 @@ app.post('/claim', async (req, res) => {
                 case "ISSUE_NOT_CLOSED_BY_PR":
                     return res.status(401).json(error);
                 default:
-                    return res.status(500).json(error);
+                    return res.status(500).send(error);
             }
         });
 });
@@ -88,9 +87,9 @@ app.post('/register', async (req, res) => {
     getUserCanAssignAddress(username, oauthToken, address)
         .then(canRegister => {
             if (canRegister) {
-                const provider = new ethers.providers.JsonRpcProvider(providerUrl);
-                const wallet = new ethers.Wallet(walletKey, provider);
-                const contract = new ethers.Contract(openQAddress, openqABI, provider);
+                const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
+                const wallet = new ethers.Wallet(process.env.WALLET_KEY, provider);
+                const contract = new ethers.Contract(process.env.OPENQ_ADDRESS, openqABI, provider);
                 const contractWithWallet = contract.connect(wallet);
                 const result = contractWithWallet.registerUserAddress(username, address);
                 console.log(result);
@@ -121,12 +120,4 @@ app.post('/issueUrlToId', async (req, res) => {
 
 app.listen(PORT);
 
-const env = {
-    "OPENQ_ADDRESS": process.env.OPENQ_ADDRESS,
-    "PROVIDER_URL": process.env.PROVIDER_URL,
-    "WALLET_KEY": process.env.WALLET_KEY,
-    "CHAIN_ID": process.env.CHAIN_ID
-};
-
-console.log(`Environment: ${JSON.stringify(env)}`);
 console.log(`Listening on ${PORT}`);
