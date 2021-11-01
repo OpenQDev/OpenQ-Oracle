@@ -7,6 +7,7 @@ const { abi: openqABI } = require('./artifacts/contracts/OpenQ.sol/OpenQ.json');
 
 // Helper methods
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
+const { getIssueCloser } = require('./lib/check-withdrawal-eligibility');
 const getUserCanAssignAddress = require('./lib/check_user_owns_address');
 const getIssueIdFromUrl = require('./lib/issueUrlToId');
 
@@ -57,27 +58,15 @@ app.post('/claim', async (req, res) => {
                     const claimBountyResult = await contractWithWallet.claimBounty(issueId, payoutAddress, options);
                     res.status(200).json(result);
                 } else {
-                    res.status(401).json({ canWithdraw: false, type: "ISSUE_IS_CLAIMED", message: "The issue you are attempting to claim has already been claimed by xyz address." });
+                    const closer = await getIssueCloser(issueId, oauthToken);
+                    console.log(closer);
+                    res.status(401).json({ canWithdraw: false, type: "ISSUE_IS_CLAIMED", message: `The issue you are attempting to claim has already been claimed by GitHub user ${closer} with the address ${payoutAddress}.` });
                 }
             }
         })
         .catch(error => {
             console.log(error);
-            const { type, reason } = error;
-            switch (type) {
-                case "NOT_FOUND":
-                    return res.status(404).json(error);
-                case "NOT_CLOSED":
-                    return res.status(404).json(error);
-                case "INVALID_OAUTH_TOKEN":
-                    return res.status(401).json(error);
-                case "ISSUE_NOT_CLOSED_BY_USER":
-                    return res.status(401).json(error);
-                case "ISSUE_NOT_CLOSED_BY_PR":
-                    return res.status(401).json(error);
-                default:
-                    return res.status(500).send(error);
-            }
+            return res.status(401).json(error);
         });
 });
 
