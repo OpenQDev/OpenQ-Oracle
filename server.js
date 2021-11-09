@@ -33,10 +33,13 @@ app.get('/env', (req, res) => {
 app.post('/claim', async (req, res) => {
 	const { issueUrl, payoutAddress } = req.body;
 
+	console.log({ level: 'trace', id: payoutAddress, message: `${payoutAddress} attempting to withdraw issue at ${issueUrl}` });
+
 	const oauthToken = req.signedCookies.github_oauth_token;
 
 	if (typeof oauthToken == 'undefined') {
-		const error = { issueId: null, canWithdraw: false, type: 'NO_GITHUB_OAUTH_TOKEN', message: 'No GitHub OAuth token. You must sign in.' };
+		const error = { level: 'error', id: payoutAddress, canWithdraw: false, type: 'NO_GITHUB_OAUTH_TOKEN', message: 'No GitHub OAuth token. You must sign in.' };
+		console.error(error);
 		return res.status(401).json(error);
 	}
 
@@ -49,25 +52,25 @@ app.post('/claim', async (req, res) => {
 				const wallet = new ethers.Wallet(process.env.WALLET_KEY, provider);
 				const contract = new ethers.Contract(process.env.OPENQ_ADDRESS, openqABI, provider);
 				const contractWithWallet = contract.connect(wallet);
-				const issueId = await getIssueIdFromUrl(issueUrl, oauthToken);
+				const { issueId, viewer } = await getIssueIdFromUrl(issueUrl, oauthToken);
 
 				const issueIsOpen = await contractWithWallet.issueIsOpen(issueId);
 				if (issueIsOpen) {
 					const options = { gasLimit: 3000000 };
 					await contractWithWallet.claimBounty(issueId, payoutAddress, options);
 					res.status(200).json(result);
+					console.log({ level: 'trace', id: payoutAddress, message: `${payoutAddress} successfully withdrawn on ${issueUrl}` });
 				} else {
-					/* This codepath is only possible if:
-											 A) A user tries to claim an issue twice
-											 B) Someone got the true closers GitHub OAuth token and closed the issue, sending funds to their own address
-										*/
 					const closer = await getIssueCloser(issueId, oauthToken);
-					res.status(401).json({ canWithdraw: false, type: 'ISSUE_IS_CLAIMED', message: `The issue you are attempting to claim has already been closed by ${closer} and sent to the address: ${payoutAddress}.` });
+					const error = { level: 'error', canWithdraw: false, id: payoutAddress, type: 'ISSUE_IS_CLAIMED', message: `The issue you are attempting to claim as ${viewer} at url ${issueUrl} has already been closed by ${closer} and sent to the address ${payoutAddress}.` };
+					console.error(error);
+					res.status(401).json(error);
 				}
 			}
 		})
-		.catch(error => {
-			console.log(error);
+		.catch(e => {
+			const error = { level: 'error', id: payoutAddress, type: e.type, message: e.message, canWithdraw: false };
+			console.error(error);
 			return res.status(401).json(error);
 		});
 });
@@ -83,7 +86,6 @@ app.post('/register', async (req, res) => {
 				const contract = new ethers.Contract(process.env.OPENQ_ADDRESS, openqABI, provider);
 				const contractWithWallet = contract.connect(wallet);
 				const result = contractWithWallet.registerUserAddress(username, address);
-				console.log(result);
 				res.send(result);
 			} else {
 				res.send(`User ${username} does not have permission to register address ${address}.`);
