@@ -57,8 +57,18 @@ app.post('/claim', async (req, res) => {
 				const issueIsOpen = await contractWithWallet.issueIsOpen(issueId);
 				if (issueIsOpen) {
 					const options = { gasLimit: 3000000 };
-					await contractWithWallet.claimBounty(issueId, payoutAddress, options);
-					res.status(200).json(result);
+
+					const txnResponse = await contractWithWallet.claimBounty(issueId, payoutAddress, options);
+					const txnReceipt = await txnResponse.wait();
+
+					for (const log of txnReceipt.logs) {
+						if (log.topics[0] == '0xe8bca3c18ca1c7ab481718f184745e0be969b9ff855fc58d9a483562ec9c960d') {
+							console.log('IssueClosed log: ', log);
+						}
+					}
+
+					const { transactionHash } = txnReceipt;
+					res.status(200).json({ issueId, payoutAddress, issueUrl, transactionHash });
 					console.log({ level: 'trace', id: payoutAddress, message: `${payoutAddress} successfully withdrawn on ${issueUrl}` });
 				} else {
 					const closer = await getIssueCloser(issueId, oauthToken);
