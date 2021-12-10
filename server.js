@@ -49,7 +49,7 @@ app.post('/claim', async (req, res) => {
 
 			if (canWithdraw) {
 				const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
-				const wallet = new ethers.Wallet(process.env.WALLET_KEY, provider);
+				const wallet = new ethers.Wallet(process.env.CLIENT, provider);
 				const contract = new ethers.Contract(process.env.OPENQ_ADDRESS, openqABI, provider);
 				const contractWithWallet = contract.connect(wallet);
 				const { issueId, viewer } = await getIssueIdFromUrl(issueUrl, oauthToken);
@@ -92,7 +92,7 @@ app.post('/register', async (req, res) => {
 		.then(canRegister => {
 			if (canRegister) {
 				const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
-				const wallet = new ethers.Wallet(process.env.WALLET_KEY, provider);
+				const wallet = new ethers.Wallet(process.env.CLIENT, provider);
 				const contract = new ethers.Contract(process.env.OPENQ_ADDRESS, openqABI, provider);
 				const contractWithWallet = contract.connect(wallet);
 				const result = contractWithWallet.registerUserAddress(username, address);

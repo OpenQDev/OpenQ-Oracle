@@ -20,7 +20,7 @@ The Ethereum RPC node to connect to. Defaults to `http://127.0.0.1:8545`
 `OPENQ_ADDRESS`
 Address of deployed `OpenQ` contract.
 
-`WALLET_KEY`
+`CLIENT`
 OpenQ owner address which was used to deploy the OpenQ smart contract on whichever network you are connected to via `RPC_NODE`
 This is necessary to call `onlyOwner` functions like withdraw.
 
