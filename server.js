@@ -3,7 +3,8 @@ const ethers = require('ethers');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
-const { abi: openqABI } = require('./artifacts/contracts/OpenQ.sol/OpenQ.json');
+
+const { abi: openqABI } = require('./artifacts/contracts/OpenQ/Implementations/OpenQV1.sol/OpenQV1.json');
 
 // Helper methods
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
@@ -54,7 +55,7 @@ app.post('/claim', async (req, res) => {
 				const contractWithWallet = contract.connect(wallet);
 				const { issueId, viewer } = await getIssueIdFromUrl(issueUrl, oauthToken);
 
-				const issueIsOpen = await contractWithWallet.issueIsOpen(issueId);
+				const issueIsOpen = await contractWithWallet.bountyIsOpen(issueId);
 				if (issueIsOpen) {
 					const options = { gasLimit: 3000000 };
 
