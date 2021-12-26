@@ -4,7 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 
-const { abi: openqABI } = require('./artifacts/contracts/OpenQ/Implementations/OpenQV1.sol/OpenQV1.json');
+const { abi: openqABI } = require('./artifacts/contracts/OpenQ/Implementations/OpenQV0.sol/OpenQV0.json');
 
 // Helper methods
 const checkWithdrawalEligibility = require('./lib/check-withdrawal-eligibility');
