@@ -24,7 +24,7 @@ app.use(express.json());
 
 // Routes
 app.get('/', (req, res) => {
-	res.send(`OpenQ address is: ${process.env.OPENQ_ADDRESS}`);
+	res.send(`OpenQProxy address is: ${process.env.OPENQ_PROXY_ADDRESS}`);
 });
 
 app.get('/env', (req, res) => {
@@ -51,7 +51,7 @@ app.post('/claim', async (req, res) => {
 			if (canWithdraw) {
 				const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
 				const wallet = new ethers.Wallet(process.env.CLIENT, provider);
-				const contract = new ethers.Contract(process.env.OPENQ_ADDRESS, openqABI, provider);
+				const contract = new ethers.Contract(process.env.OPENQ_PROXY_ADDRESS, openqABI, provider);
 				const contractWithWallet = contract.connect(wallet);
 				const { issueId, viewer } = await getIssueIdFromUrl(issueUrl, oauthToken);
 
@@ -94,7 +94,7 @@ app.post('/register', async (req, res) => {
 			if (canRegister) {
 				const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
 				const wallet = new ethers.Wallet(process.env.CLIENT, provider);
-				const contract = new ethers.Contract(process.env.OPENQ_ADDRESS, openqABI, provider);
+				const contract = new ethers.Contract(process.env.OPENQ_PROXY_ADDRESS, openqABI, provider);
 				const contractWithWallet = contract.connect(wallet);
 				const result = contractWithWallet.registerUserAddress(username, address);
 				res.send(result);
