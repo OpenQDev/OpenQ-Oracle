@@ -3,7 +3,6 @@ const ethers = require('ethers');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
-
 const { abi: openqABI } = require('./artifacts/contracts/OpenQ/Implementations/OpenQV0.sol/OpenQV0.json');
 
 // Helper methods
@@ -23,14 +22,6 @@ app.use(cookieParser('entropydfnjd23'));
 app.use(express.json());
 
 // Routes
-app.get('/', (req, res) => {
-	res.send(`OpenQProxy address is: ${process.env.OPENQ_PROXY_ADDRESS}`);
-});
-
-app.get('/env', (req, res) => {
-	res.send(`${JSON.stringify(process.env.PROVIDER_URL)}`);
-});
-
 app.post('/claim', async (req, res) => {
 	const { issueUrl, payoutAddress } = req.body;
 
@@ -51,7 +42,7 @@ app.post('/claim', async (req, res) => {
 			if (canWithdraw) {
 				const provider = new ethers.providers.JsonRpcProvider(process.env.PROVIDER_URL);
 				const wallet = new ethers.Wallet(process.env.CLIENT, provider);
-				const contract = new ethers.Contract(process.env.OPENQ_PROXY_ADDRESS, openqABI, provider);
+				const contract = new ethers.Contract(process.env.OPENQ_ADDRESS, openqABI, provider);
 				const contractWithWallet = contract.connect(wallet);
 				const { issueId, viewer } = await getIssueIdFromUrl(issueUrl, oauthToken);
 
