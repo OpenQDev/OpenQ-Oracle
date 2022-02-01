@@ -1,10 +1,11 @@
-const express = require('express');
+require('dotenv').config();
 const axios = require('axios');
+const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
-// Setup environment
-require('dotenv').config();
+// Core Function
+const claim = require('./claim');
 
 // Configure Express server middleware
 const PORT = 8090;
@@ -15,25 +16,14 @@ app.use(cookieParser());
 
 // Routes
 app.post('/claim', async (req, res, next) => {
-	const { issueUrl, payoutAddress } = req.body;
-
-	console.log({ level: 'trace', id: payoutAddress, message: `${payoutAddress} attempting to withdraw issue at ${issueUrl}` });
-
-	// All this oracle does is extract the Cookie header from the client to add as a Header for the real Oracle
-	const encryptedOauthToken = req.cookies.github_oauth_token;
-
 	try {
-		const result = await axios.post(process.env.OZ_CLAIM_AUTOTASK_URL, { issueUrl, payoutAddress}, { headers: { 'X-Authorization': encryptedOauthToken}});
-		const { txnHash, issueId } = result.data;
-		res.status(200).json({ issueId, payoutAddress, issueUrl, txnHash });
+		const { issueUrl, payoutAddress } = req.body;
+		const encryptedOauthToken = req.cookies.github_oauth_token;
+		const claim = await claim(issueUrl, payoutAddress, encryptedOauthToken);
+		res.json(claim);
 	} catch (error) {
-		return next(error);
+		res.status(500).send(error);
 	}
-});
-
-app.use((error, req, res, next) => {
-	console.log(error.response.data);
-	res.status(401).json(error.response.data);
 });
 
 app.listen(PORT);
