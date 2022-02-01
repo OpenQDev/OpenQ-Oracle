@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 
 // Core Function
 const claim = require('./claim');
+const { response } = require('express');
 
 // Configure Express server middleware
 const PORT = 8090;
@@ -19,10 +20,15 @@ app.post('/claim', async (req, res, next) => {
 	try {
 		const { issueUrl, payoutAddress } = req.body;
 		const encryptedOauthToken = req.cookies.github_oauth_token;
-		const claim = await claim(issueUrl, payoutAddress, encryptedOauthToken);
-		res.json(claim);
+		const claimResponse = await claim(issueUrl, payoutAddress, encryptedOauthToken);
+		res.json(claimResponse);
 	} catch (error) {
-		res.status(500).send(error);
+		console.log(error);
+		if (error.response && error.response.data) {
+			res.status(500).send(error.response.data);
+		} else {
+			res.status(500).send(error);
+		}
 	}
 });
 
