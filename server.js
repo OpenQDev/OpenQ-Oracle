@@ -19,11 +19,12 @@ app.use(cookieParser());
 app.post('/claim', async (req, res, next) => {
 	try {
 		const { issueUrl, payoutAddress } = req.body;
-		const encryptedOauthToken = req.cookies.github_oauth_token;
-		const claimResponse = await claim(issueUrl, payoutAddress, encryptedOauthToken);
-		res.json(claimResponse);
+		const signedOauthToken = req.cookies.github_oauth_token;
+		const claimResponse = await claim(issueUrl, payoutAddress, signedOauthToken);
+		console.log('Response returned to /claim', claimResponse);
+		res.status(200).json(claimResponse.data.result);
 	} catch (error) {
-		console.log(error);
+		console.log('Error occured in /claim', error);
 		if (error.response && error.response.data) {
 			res.status(500).send(error.response.data);
 		} else {
