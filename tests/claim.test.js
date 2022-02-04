@@ -18,9 +18,4 @@ describe('claim.js', () => {
 		const { data } = result;
 		await expect(data).toEqual(expectedData);
 	});
-
-	it('should reject with error', async () => {
-		mock.onPost('http://openq-oz-claim-autotask:8070').reply(401);
-		await expect(claim('issueUrl', 'payouAddress', 'oauthToken')).rejects.toThrow("Request failed with status code 401");
-	});
 });
