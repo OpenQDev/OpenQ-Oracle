@@ -23,7 +23,6 @@ app.post('/claim', async (req, res, next) => {
 	try {
 		const { issueUrl, payoutAddress } = req.body;
 		const signedOauthToken = req.cookies.github_oauth_token;
-		console.log('signedOauthToken', signedOauthToken);
 		const claimResponse = await claim(issueUrl, payoutAddress, signedOauthToken);
 		const claimResponseData = JSON.parse(claimResponse.data.result);
 		if (claimResponseData.canWithdraw == false) {
