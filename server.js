@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 
 // Core Function
 const claim = require('./claim');
+const associateUserIdToAddress = require('./associateUserIdToAddress');
 const { response } = require('express');
 
 // Configure Express server middleware
@@ -29,6 +30,26 @@ app.post('/claim', async (req, res, next) => {
 			res.status(500).json(claimResponseData);
 		} else {
 			res.status(200).json(claimResponseData);
+		}
+	} catch (error) {
+		if (error.response && error.response.data) {
+			res.status(500).send(error.response.data);
+		} else {
+			res.status(500).send(error);
+		}
+	}
+});
+
+app.post('/associateUserIdToAddress', async (req, res, next) => {
+	try {
+		const { userId, userAddress } = req.body;
+		const signedOauthToken = req.cookies.github_oauth_token;
+		const associateUserIdToAddressResponse = await associateUserIdToAddress(issueUrl, payoutAddress, signedOauthToken);
+		const associateUserIdToAddressResponseData = JSON.parse(associateUserIdToAddressResponse.data.result);
+		if (associateUserIdToAddressResponseData.viewerIsValid == false) {
+			res.status(500).json(associateUserIdToAddressResponseData);
+		} else {
+			res.status(200).json(associateUserIdToAddressResponseData);
 		}
 	} catch (error) {
 		if (error.response && error.response.data) {
