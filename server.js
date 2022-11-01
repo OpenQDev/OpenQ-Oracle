@@ -44,14 +44,16 @@ app.post('/associateUserIdToAddress', async (req, res, next) => {
 	try {
 		const { userId, userAddress } = req.body;
 		const signedOauthToken = req.cookies.github_oauth_token;
-		const associateUserIdToAddressResponse = await associateUserIdToAddress(issueUrl, payoutAddress, signedOauthToken);
+		const associateUserIdToAddressResponse = await associateUserIdToAddress(userId, userAddress, signedOauthToken);
 		const associateUserIdToAddressResponseData = JSON.parse(associateUserIdToAddressResponse.data.result);
+		console.log(associateUserIdToAddressResponseData);
 		if (associateUserIdToAddressResponseData.viewerIsValid == false) {
 			res.status(500).json(associateUserIdToAddressResponseData);
 		} else {
 			res.status(200).json(associateUserIdToAddressResponseData);
 		}
 	} catch (error) {
+		console.log(error);
 		if (error.response && error.response.data) {
 			res.status(500).send(error.response.data);
 		} else {
