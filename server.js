@@ -42,6 +42,8 @@ app.post('/claim', async (req, res, next) => {
 
 app.post('/associateUserIdToAddress', async (req, res, next) => {
 	try {
+		console.log(req.headers)
+		console.log(req.headers['signature'])
 		const { userId, userAddress } = req.body;
 		const signedOauthToken = req.cookies.github_oauth_token;
 		const signature = req.headers['signature']; 
